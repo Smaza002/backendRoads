@@ -12,6 +12,11 @@ target_include_directories(backend
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_compile_definitions(backend
+    PRIVATE
+        CPPHTTPLIB_OPENSSL_SUPPORT
+)
+
 target_link_libraries(backend
     PRIVATE
         httplib::httplib
