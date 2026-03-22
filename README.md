@@ -1,11 +1,12 @@
 # C++20 Backend Scaffold
 
-Base backend en C++20 preparada para:
+Backend en C++20 preparado para Render con la misma logica base que tenia el backend anterior:
 
-- CMake
-- Conan 2
-- Docker
-- despliegue en Render
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- PostgreSQL por `DATABASE_URL`
+- JWT por `JWT_SECRET`
 
 ## Estructura
 
@@ -22,6 +23,26 @@ Base backend en C++20 preparada para:
 └── src/
 ```
 
+## Variables de entorno
+
+- `HOST`: bind del servidor. Por defecto `0.0.0.0`
+- `PORT`: puerto HTTP. Por defecto `8080`
+- `DATABASE_URL`: cadena de conexion PostgreSQL
+- `JWT_SECRET`: secreto para firmar tokens
+
+## Notas de base de datos
+
+El backend crea `pgcrypto` al arrancar con `CREATE EXTENSION IF NOT EXISTS pgcrypto` para poder hashear y validar passwords con bcrypt desde PostgreSQL.
+Tu tabla `users` debe tener al menos:
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+```
+
 ## Desarrollo local
 
 ```bash
@@ -31,13 +52,3 @@ cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan/generated/build/Releas
 cmake --build build
 ./build/backend
 ```
-
-## Variables de entorno
-
-- `PORT`: puerto HTTP del servidor. Por defecto `8080`.
-- `HOST`: host bind. Por defecto `0.0.0.0`.
-
-## Render
-
-Configura el servicio como `Docker`.
-La app escucha en `PORT` si Render lo inyecta.

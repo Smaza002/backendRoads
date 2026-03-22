@@ -1,5 +1,8 @@
 [requires]
-cpp-httplib/0.18.6
+cpp-httplib/0.28.0
+nlohmann_json/3.11.3
+libpqxx/7.10.1
+openssl/3.3.2
 
 [generators]
 CMakeDeps

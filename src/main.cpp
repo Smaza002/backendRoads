@@ -1,8 +1,14 @@
-#include <cstdlib>
-#include <iostream>
-#include <string>
+#include "config/database.hpp"
+#include "controllers/auth_controller.hpp"
+#include "utils/http_utils.hpp"
 
 #include <httplib.h>
+#include <nlohmann/json.hpp>
+
+#include <cstdlib>
+#include <exception>
+#include <iostream>
+#include <string>
 
 namespace {
 
@@ -29,17 +35,29 @@ int main() {
     const std::string host = get_env_or_default("HOST", "0.0.0.0");
     const int port = get_port();
 
+    try {
+        config::ensure_extensions();
+    } catch (const std::exception& err) {
+        std::cerr << "Database initialization error: " << err.what() << '\n';
+        return 1;
+    }
+
     httplib::Server server;
 
     server.Get("/", [](const httplib::Request&, httplib::Response& res) {
-        res.set_content(R"({"service":"backend","status":"ok"})", "application/json");
+        utils::send_json(res, 200, {{"message", "API funcionando"}});
     });
 
-    server.Get("/health", [](const httplib::Request&, httplib::Response& res) {
-        res.set_content(R"({"status":"healthy"})", "application/json");
-    });
+    server.Post("/api/auth/register", controllers::register_user);
+    server.Post("/api/auth/login", controllers::login_user);
+    server.Get("/api/auth/me", controllers::me);
 
-    std::cout << "Listening on " << host << ':' << port << '\n';
+    server.Options("/", controllers::options_ok);
+    server.Options("/api/auth/register", controllers::options_ok);
+    server.Options("/api/auth/login", controllers::options_ok);
+    server.Options("/api/auth/me", controllers::options_ok);
+
+    std::cout << "Servidor corriendo en puerto " << port << '\n';
 
     if (!server.listen(host, port)) {
         std::cerr << "Failed to start server on " << host << ':' << port << '\n';

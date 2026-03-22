@@ -3,8 +3,10 @@
 /.idea/
 /.vscode/
 /.render/
+/legacy-node/
 conan/generated/
 *.o
 *.obj
 *.log
 *.tar.gz
+.env
