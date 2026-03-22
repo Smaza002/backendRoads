@@ -59,7 +59,11 @@ LoginResult login_user(const std::string& email, const std::string& password) {
     const std::string password_hash = user["password"].c_str();
 
     const pqxx::row validation = tx.exec_params1(
-        "SELECT crypt($1, $2) = $2 AS valid_password",
+        "WITH pw AS (SELECT $2::text AS p) "
+        "SELECT (crypt($1, p) = p) "
+        "   OR (crypt($1, replace(p, '$2b$', '$2y$')) = replace(p, '$2b$', '$2y$')) "
+        "   OR (crypt($1, replace(p, '$2b$', '$2a$')) = replace(p, '$2b$', '$2a$')) "
+        "AS valid_password FROM pw",
         password,
         password_hash);
 
