@@ -1,0 +1,7 @@
+build
+.git
+.gitignore
+.idea
+.vscode
+cmake-build-*
+legacy-node/node_modules

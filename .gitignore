@@ -1,0 +1,10 @@
+/build/
+/.cache/
+/.idea/
+/.vscode/
+/.render/
+conan/generated/
+*.o
+*.obj
+*.log
+*.tar.gz
