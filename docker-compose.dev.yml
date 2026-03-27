@@ -1,0 +1,16 @@
+services:
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-development
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      HTTPS_ENABLED: "false"
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGINS: http://localhost:8100
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

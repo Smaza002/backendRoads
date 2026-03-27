@@ -2,6 +2,7 @@
 cpp-httplib/0.28.0
 nlohmann_json/3.11.3
 libpqxx/7.10.1
+gtest/1.17.0
 openssl/3.3.2
 
 [options]

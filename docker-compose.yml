@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: backend-production
     environment:
       HOST: 0.0.0.0
       HTTPS_ENABLED: "true"

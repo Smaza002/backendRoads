@@ -28,10 +28,11 @@ COPY src ./src
 COPY cots ./cots
 
 RUN conan profile detect --force
-RUN conan install . --output-folder=conan/generated --build=missing -s build_type=Release
+RUN conan install . --output-folder=conan/generated --build=missing -s build_type=Release -s compiler.cppstd=20 -o "libpq/*:with_openssl=True"
 RUN cmake -S . -B build -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE=conan/generated/build/Release/generators/conan_toolchain.cmake \
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTING=OFF
 RUN cmake --build build --config Release
 
 FROM ubuntu:24.04 AS runtime

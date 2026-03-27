@@ -1,82 +1,39 @@
 #include "services/auth_service.hpp"
 
-#include "config/database.hpp"
-#include "utils/jwt_utils.hpp"
-
-#include <pqxx/pqxx>
-
 #include <stdexcept>
-#include <string>
 
 namespace services {
-namespace {
 
-void validate_credentials(const std::string& email, const std::string& password) {
-    if (email.empty() || password.empty()) {
-        throw std::runtime_error("Email y password son obligatorios");
-    }
-}
+AuthService::AuthService(repositories::UserRepository& user_repository, const TokenService& token_service)
+    : user_repository_(user_repository),
+      token_service_(token_service) {}
 
-}  // namespace
-
-RegisteredUser register_user(const std::string& email, const std::string& password) {
+RegisteredUser AuthService::register_user(std::string_view email, std::string_view password) {
     validate_credentials(email, password);
 
-    auto connection = config::make_connection();
-    pqxx::work tx(connection);
-
-    const pqxx::row row = tx.exec_params1(
-        "INSERT INTO users (email, password) "
-        "VALUES ($1, crypt($2, gen_salt('bf', 10))) "
-        "RETURNING id, email",
-        email,
-        password);
-
-    RegisteredUser user{
-        row["id"].as<int>(),
-        row["email"].c_str()
-    };
-
-    tx.commit();
-    return user;
+    const auto user = user_repository_.create(email, password);
+    return RegisteredUser{user.id, user.email};
 }
 
-LoginResult login_user(const std::string& email, const std::string& password) {
+LoginResult AuthService::login_user(std::string_view email, std::string_view password) const {
     validate_credentials(email, password);
 
-    auto connection = config::make_connection();
-    pqxx::work tx(connection);
-
-    const pqxx::result users = tx.exec_params(
-        "SELECT id, email, password FROM users WHERE email = $1",
-        email);
-
-    if (users.empty()) {
+    const auto user = user_repository_.find_by_email(email);
+    if (!user.has_value()) {
         throw std::runtime_error("Usuario no encontrado");
     }
 
-    const pqxx::row user = users.front();
-    const std::string password_hash = user["password"].c_str();
-
-    const pqxx::row validation = tx.exec_params1(
-        "WITH pw AS (SELECT $2::text AS p) "
-        "SELECT (crypt($1, p) = p) "
-        "   OR (crypt($1, replace(p, '$2b$', '$2y$')) = replace(p, '$2b$', '$2y$')) "
-        "   OR (crypt($1, replace(p, '$2b$', '$2a$')) = replace(p, '$2b$', '$2a$')) "
-        "AS valid_password FROM pw",
-        password,
-        password_hash);
-
-    if (!validation["valid_password"].as<bool>()) {
-        throw std::runtime_error("Contrase\u00f1a incorrecta");
+    if (!user_repository_.verify_password(password, user->password_hash)) {
+        throw std::runtime_error("Contrasena incorrecta");
     }
 
-    LoginResult result{
-        utils::create_token(user["id"].as<int>(), user["email"].c_str())
-    };
+    return LoginResult{token_service_.create_token(UserIdentity{user->id, user->email})};
+}
 
-    tx.commit();
-    return result;
+void AuthService::validate_credentials(std::string_view email, std::string_view password) {
+    if (email.empty() || password.empty()) {
+        throw std::runtime_error("Email y password son obligatorios");
+    }
 }
 
 }  // namespace services
