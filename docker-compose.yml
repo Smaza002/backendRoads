@@ -5,15 +5,16 @@ services:
       dockerfile: Dockerfile
     container_name: backend-production
     environment:
-      HOST: 0.0.0.0
-      HTTPS_ENABLED: "true"
-      HTTPS_PORT: 8443
+      HOST: ${HOST}
+      HTTPS_ENABLED: ${PROD_HTTPS_ENABLED}
+      HTTPS_PORT: ${PROD_HTTPS_PORT}
       HTTPS_CERT_FILE: /app/certs/cert.pem
       HTTPS_KEY_FILE: /app/certs/key.pem
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGINS: ${PROD_ALLOWED_ORIGINS}
     ports:
-      - "443:8443"
+      - "${PROD_HTTPS_EXTERNAL_PORT}:${PROD_HTTPS_PORT}"
     volumes:
       - backend_certs:/app/certs
     restart: unless-stopped

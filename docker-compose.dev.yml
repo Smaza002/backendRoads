@@ -5,12 +5,12 @@ services:
       dockerfile: Dockerfile
     container_name: backend-development
     environment:
-      HOST: 0.0.0.0
-      PORT: 8080
-      HTTPS_ENABLED: "false"
+      HOST: ${HOST}
+      PORT: ${DEV_PORT}
+      HTTPS_ENABLED: ${DEV_HTTPS_ENABLED}
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
-      ALLOWED_ORIGINS: http://localhost:8100
+      ALLOWED_ORIGINS: ${DEV_ALLOWED_ORIGINS}
     ports:
-      - "8080:8080"
+      - "${DEV_HTTP_EXTERNAL_PORT}:${DEV_PORT}"
     restart: unless-stopped
