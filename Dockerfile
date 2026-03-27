@@ -9,14 +9,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     python3 \
     python3-pip \
+    python3-venv \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir conan
+RUN python3 -m venv /opt/conan-venv
+ENV PATH="/opt/conan-venv/bin:${PATH}"
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir conan
 
 WORKDIR /app
 
 COPY CMakeLists.txt ./
+COPY conanfile.txt ./
 COPY cmake ./cmake
 COPY conan ./conan
 COPY src ./src
@@ -40,15 +45,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /app/build/backend /app/backend
+COPY --from=builder /app/build/src/backend /app/backend
+COPY docker/entrypoint.sh /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
-ENV HTTPS_ENABLED=false
+ENV HTTPS_ENABLED=true
 ENV HTTPS_PORT=8443
-ENV HTTPS_CERT_FILE=/certs/cert.pem
-ENV HTTPS_KEY_FILE=/certs/key.pem
+ENV HTTPS_CERT_FILE=/app/certs/cert.pem
+ENV HTTPS_KEY_FILE=/app/certs/key.pem
 
-EXPOSE 8080 8443
+EXPOSE 8443
 
-CMD ["/app/backend"]
+ENTRYPOINT ["/app/entrypoint.sh"]

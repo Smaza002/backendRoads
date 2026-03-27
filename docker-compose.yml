@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HOST: 0.0.0.0
+      HTTPS_ENABLED: "true"
+      HTTPS_PORT: 8443
+      HTTPS_CERT_FILE: /app/certs/cert.pem
+      HTTPS_KEY_FILE: /app/certs/key.pem
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "443:8443"
+    volumes:
+      - backend_certs:/app/certs
+    restart: unless-stopped
+
+volumes:
+  backend_certs:

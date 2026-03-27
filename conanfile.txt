@@ -4,6 +4,9 @@ nlohmann_json/3.11.3
 libpqxx/7.10.1
 openssl/3.3.2
 
+[options]
+libpq/*:with_openssl=True
+
 [generators]
 CMakeDeps
 CMakeToolchain

@@ -10,3 +10,5 @@ conan/generated/
 *.log
 *.tar.gz
 .env
+*.pem
+
