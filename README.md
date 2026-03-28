@@ -53,7 +53,8 @@ El target principal de la logica es `backend_core`, y el ejecutable final es `ba
 - `HTTPS_PORT`: puerto HTTPS. Por defecto `8443`
 - `HTTPS_CERT_FILE`: ruta del certificado
 - `HTTPS_KEY_FILE`: ruta de la clave privada
-- `DATABASE_URL`: cadena de conexion PostgreSQL
+- `DATABASE_URL`: cadena de conexion PostgreSQL usada por la aplicacion
+- `MIGRATION_DATABASE_URL`: cadena de conexion PostgreSQL usada por `scripts/migrate.sh`. Si no se define en la app, hace fallback a `DATABASE_URL`
 - `JWT_SECRET`: secreto para firmar tokens
 
 ## Base de datos
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ```
 
-Si `DATABASE_URL` no incluye `sslmode`, la aplicacion anade `sslmode=require` automaticamente.
+Si `DATABASE_URL` o `MIGRATION_DATABASE_URL` no incluyen `sslmode`, la aplicacion y el flujo de migraciones anaden `sslmode=require` automaticamente.
 
 ## Desarrollo local
 
@@ -106,6 +107,7 @@ ctest --test-dir build --output-on-failure
 
 ```bash
 export DATABASE_URL='postgres://usuario:password@host:5432/db?sslmode=require'
+export MIGRATION_DATABASE_URL='postgres://usuario:password@host:5432/db?sslmode=require'
 export JWT_SECRET='cambia-esto'
 ./build/src/backend
 ```
@@ -143,13 +145,15 @@ El servicio definido en [docker-compose.yml](/home/desa/Proyectos/backend/docker
 El entrypoint [docker/entrypoint.sh](/home/desa/Proyectos/backend/docker/entrypoint.sh):
 
 - crea `/app/certs` si no existe
-- genera un certificado autofirmado si faltan `cert.pem` o `key.pem`
-- arranca el backend con HTTPS habilitado
+- genera un certificado autofirmado si HTTPS esta habilitado y faltan `cert.pem` o `key.pem`
+- ejecuta `scripts/migrate.sh` si `MIGRATION_DATABASE_URL` esta definida
+- arranca el backend en HTTP o HTTPS segun `HTTPS_ENABLED`
 
 Por defecto, Compose espera estas variables en tu entorno o en un archivo `.env`:
 
 ```env
 DATABASE_URL=postgres://usuario:password@host:5432/db?sslmode=require
+MIGRATION_DATABASE_URL=postgres://usuario:password@host:5432/db?sslmode=require
 JWT_SECRET=super-secreto
 ```
 

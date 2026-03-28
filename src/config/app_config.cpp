@@ -61,6 +61,13 @@ AppConfig AppConfig::from_environment(const Environment& environment) {
     config.https_cert_file = get_or_default(environment, "HTTPS_CERT_FILE", config.https_enabled ? "cert.pem" : "");
     config.https_key_file = get_or_default(environment, "HTTPS_KEY_FILE", config.https_enabled ? "key.pem" : "");
     config.database_url = normalize_database_url(require_value(environment, "DATABASE_URL"));
+
+    if (const auto migration_value = environment.get("MIGRATION_DATABASE_URL"); migration_value.has_value() && !migration_value->empty()) {
+        config.migration_database_url = normalize_database_url(*migration_value);
+    } else {
+        config.migration_database_url = config.database_url;
+    }
+
     config.jwt_secret = require_value(environment, "JWT_SECRET");
     return config;
 }

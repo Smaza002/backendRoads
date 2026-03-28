@@ -25,7 +25,6 @@ COPY conanfile.txt ./
 COPY cmake ./cmake
 COPY conan ./conan
 COPY src ./src
-COPY cots ./cots
 
 RUN conan profile detect --force
 RUN conan install . --output-folder=conan/generated --build=missing -s build_type=Release -s compiler.cppstd=20 -o "libpq/*:with_openssl=True"
@@ -42,14 +41,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     openssl \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY --from=builder /app/build/src/backend /app/backend
 COPY docker/entrypoint.sh /app/entrypoint.sh
+COPY scripts/migrate.sh /app/migrate.sh
+COPY migrations /app/migrations
 
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh /app/migrate.sh
 
 ENV HOST=0.0.0.0
 ENV PORT=8080

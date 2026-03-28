@@ -33,6 +33,7 @@ TEST(AppConfigTest, ReadsCompleteConfiguration) {
         {"HTTPS_CERT_FILE", "/tmp/cert.pem"},
         {"HTTPS_KEY_FILE", "/tmp/key.pem"},
         {"DATABASE_URL", "postgres://user:pass@db/app"},
+        {"MIGRATION_DATABASE_URL", "postgres://user:pass@migrations-db/app"},
         {"JWT_SECRET", "secret-value"}
     };
 
@@ -46,17 +47,30 @@ TEST(AppConfigTest, ReadsCompleteConfiguration) {
     EXPECT_EQ(config.https_cert_file, "/tmp/cert.pem");
     EXPECT_EQ(config.https_key_file, "/tmp/key.pem");
     EXPECT_EQ(config.database_url, "postgres://user:pass@db/app?sslmode=require");
+    EXPECT_EQ(config.migration_database_url, "postgres://user:pass@migrations-db/app?sslmode=require");
     EXPECT_EQ(config.jwt_secret, "secret-value");
 }
 
 TEST(AppConfigTest, KeepsExistingSslMode) {
     const FakeEnvironment environment{
         {"DATABASE_URL", "postgres://user:pass@db/app?sslmode=disable"},
+        {"MIGRATION_DATABASE_URL", "postgres://user:pass@migrations-db/app?sslmode=disable"},
         {"JWT_SECRET", "secret-value"}
     };
 
     const auto config = config::AppConfig::from_environment(environment);
     EXPECT_EQ(config.database_url, "postgres://user:pass@db/app?sslmode=disable");
+    EXPECT_EQ(config.migration_database_url, "postgres://user:pass@migrations-db/app?sslmode=disable");
+}
+
+TEST(AppConfigTest, FallsBackToDatabaseUrlForMigrations) {
+    const FakeEnvironment environment{
+        {"DATABASE_URL", "postgres://user:pass@db/app"},
+        {"JWT_SECRET", "secret-value"}
+    };
+
+    const auto config = config::AppConfig::from_environment(environment);
+    EXPECT_EQ(config.migration_database_url, config.database_url);
 }
 
 TEST(AppConfigTest, ThrowsWhenRequiredValuesAreMissing) {

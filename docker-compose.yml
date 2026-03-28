@@ -11,6 +11,7 @@ services:
       HTTPS_CERT_FILE: /app/certs/cert.pem
       HTTPS_KEY_FILE: /app/certs/key.pem
       DATABASE_URL: ${DATABASE_URL}
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       ALLOWED_ORIGINS: ${PROD_ALLOWED_ORIGINS}
     ports:

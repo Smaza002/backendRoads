@@ -14,6 +14,7 @@ struct AppConfig {
     std::string https_cert_file;
     std::string https_key_file;
     std::string database_url;
+    std::string migration_database_url;
     std::string jwt_secret;
 
     [[nodiscard]] int active_port() const noexcept;
