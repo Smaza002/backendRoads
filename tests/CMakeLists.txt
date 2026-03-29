@@ -1,6 +1,10 @@
 add_executable(backend_tests
-    app_config_test.cpp
-    auth_service_test.cpp
+    config/app_config_test.cpp
+    config/environment_test.cpp
+    controllers/auth_controller_test.cpp
+    services/auth_service_test.cpp
+    services/jwt_token_service_test.cpp
+    utils/http_utils_test.cpp
 )
 
 target_link_libraries(backend_tests

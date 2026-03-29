@@ -73,6 +73,51 @@ TEST(AppConfigTest, FallsBackToDatabaseUrlForMigrations) {
     EXPECT_EQ(config.migration_database_url, config.database_url);
 }
 
+TEST(AppConfigTest, UsesDefaultsForOptionalValues) {
+    const FakeEnvironment environment{
+        {"DATABASE_URL", "postgres://user:pass@db/app"},
+        {"JWT_SECRET", "secret-value"}
+    };
+
+    const auto config = config::AppConfig::from_environment(environment);
+
+    EXPECT_EQ(config.host, "0.0.0.0");
+    EXPECT_EQ(config.http_port, 8080);
+    EXPECT_EQ(config.https_port, 8443);
+    EXPECT_FALSE(config.https_enabled);
+    EXPECT_TRUE(config.https_cert_file.empty());
+    EXPECT_TRUE(config.https_key_file.empty());
+    EXPECT_EQ(config.active_port(), 8080);
+}
+
+TEST(AppConfigTest, UsesHttpsDefaultCertificateFilesWhenEnabled) {
+    const FakeEnvironment environment{
+        {"HTTPS_ENABLED", "yes"},
+        {"DATABASE_URL", "postgres://user:pass@db/app"},
+        {"JWT_SECRET", "secret-value"}
+    };
+
+    const auto config = config::AppConfig::from_environment(environment);
+
+    EXPECT_TRUE(config.https_enabled);
+    EXPECT_EQ(config.https_cert_file, "cert.pem");
+    EXPECT_EQ(config.https_key_file, "key.pem");
+}
+
+TEST(AppConfigTest, FallsBackToDefaultPortsWhenTheyAreInvalid) {
+    const FakeEnvironment environment{
+        {"PORT", "not-a-number"},
+        {"HTTPS_PORT", "still-invalid"},
+        {"DATABASE_URL", "postgres://user:pass@db/app"},
+        {"JWT_SECRET", "secret-value"}
+    };
+
+    const auto config = config::AppConfig::from_environment(environment);
+
+    EXPECT_EQ(config.http_port, 8080);
+    EXPECT_EQ(config.https_port, 8443);
+}
+
 TEST(AppConfigTest, ThrowsWhenRequiredValuesAreMissing) {
     const FakeEnvironment environment{{"JWT_SECRET", "secret-value"}};
     EXPECT_THROW((void)config::AppConfig::from_environment(environment), std::runtime_error);

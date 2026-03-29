@@ -66,6 +66,16 @@ TEST(AuthServiceTest, RegistersUserThroughRepository) {
     EXPECT_EQ(user.email, "created@example.com");
 }
 
+TEST(AuthServiceTest, RejectsEmptyCredentialsWhenRegistering) {
+    FakeUserRepository repository;
+    FakeTokenService token_service;
+    services::AuthService service{repository, token_service};
+
+    EXPECT_THROW((void)service.register_user("", "password"), std::runtime_error);
+    EXPECT_THROW((void)service.register_user("user@example.com", ""), std::runtime_error);
+    EXPECT_FALSE(repository.create_called);
+}
+
 TEST(AuthServiceTest, CreatesTokenWhenCredentialsAreValid) {
     FakeUserRepository repository;
     repository.found_user = repositories::UserRecord{9, "user@example.com", "stored-hash"};
@@ -83,6 +93,17 @@ TEST(AuthServiceTest, CreatesTokenWhenCredentialsAreValid) {
     EXPECT_EQ(token_service.last_user.id, 9);
     EXPECT_EQ(token_service.last_user.email, "user@example.com");
     EXPECT_EQ(result.token, "test-token");
+}
+
+TEST(AuthServiceTest, RejectsEmptyCredentialsWhenLoggingIn) {
+    FakeUserRepository repository;
+    FakeTokenService token_service;
+    services::AuthService service{repository, token_service};
+
+    EXPECT_THROW((void)service.login_user("", "password"), std::runtime_error);
+    EXPECT_THROW((void)service.login_user("user@example.com", ""), std::runtime_error);
+    EXPECT_FALSE(repository.find_called);
+    EXPECT_FALSE(repository.verify_called);
 }
 
 TEST(AuthServiceTest, ThrowsWhenUserDoesNotExist) {
